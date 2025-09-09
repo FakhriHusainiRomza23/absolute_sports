@@ -3,11 +3,11 @@ from django.db import models
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
-        ('transfer', 'Transfer'),
+        ('football', 'Football'),
         ('update', 'Update'),
         ('exclusive', 'Exclusive'),
         ('match', 'Match'),
-        ('rumor', 'Rumor'),
+        ('shoes', 'Shoes'),
         ('analysis', 'Analysis'),
     ]
     
