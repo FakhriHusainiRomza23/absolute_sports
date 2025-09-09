@@ -4,11 +4,10 @@ from django.db import models
 class Product(models.Model):
     CATEGORY_CHOICES = [
         ('football', 'Football'),
-        ('update', 'Update'),
-        ('exclusive', 'Exclusive'),
-        ('match', 'Match'),
+        ('socks', 'Socks'),
+        ('jersey', 'Jersey'),
+        ('knee guard', 'Knee Guard'),
         ('shoes', 'Shoes'),
-        ('analysis', 'Analysis'),
     ]
     
     name = models.CharField(max_length=255)
