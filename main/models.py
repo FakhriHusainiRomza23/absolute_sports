@@ -16,6 +16,7 @@ class Product(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='update')
     thumbnail = models.URLField(blank=True, null=True)
     is_featured = models.BooleanField(default=False)
+    product_views = models.PositiveIntegerField(default=0)
     
     def __str__(self):
         return self.name
