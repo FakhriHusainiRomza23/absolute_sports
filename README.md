@@ -230,6 +230,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
     return render(request, 'register.html', context)
     ```
    Lalu, buat file `register.html` di main/templates dan file itu diisi dengan
+
    ```
    {% extends 'base.html' %}
 
@@ -266,6 +267,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
    ```
 
    Lalu, untuk membuat fungsi login, buat fungsi login_user di views.py
+
    ```
    def login_user(request):
    if request.method == 'POST':
@@ -284,6 +286,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
    ```
 
    buat file baru bernama login.html di main/templates
+
    ```
    {% extends 'base.html' %}
 
@@ -320,6 +323,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
    ```
 
    Lalu untuk membuat fungsi logout, buat fungsi ini di `views.py` 
+
    ```
    def logout_user(request):
       logout(request)
@@ -327,7 +331,9 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
       response.delete_cookie('last_login')
       return response
    ```
+
    di file main.html di direktori main/templates buat kode ini di bawah Add Product
+
    ```
    <a href="{% url 'main:logout' %}">
       <button>Logout</button>
@@ -335,6 +341,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
    ```
 
    di `views.py`, import dan tambahkan path url fungsi-fungsi yang sudah dibuat
+
    ```
    from main.views import register
    from main.views import login_user
@@ -365,6 +372,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
    Lalu, lakukan migrasi model dengan `python manage.py makemigrations` dan `python manage.py migrate` 
 
    Buka views.py pada bagian create_product, ubah kode agar menjadi seperti ini:
+
    ```
    def create_product(request):
     form = ProductForm(request.POST or None)
@@ -383,6 +391,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
     ```
 
     lalu, pada show_main:
+
     ```
    @login_required(login_url='/login')
    def show_main(request):
@@ -414,17 +423,19 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
       </a> 
       ```
 
-      tambahkan juga di product_detail.html:
-      ```
-      {% if product.user %}
-         <p>Added by: {{ product.user.username }}</p>
-      {% else %}
-         <p>Added by: Anonymous</p>
-      {% endif %}
-      ```
+   tambahkan juga di product_detail.html:
+
+   ```
+   {% if product.user %}
+   <p>Added by: {{ product.user.username }}</p>
+   {% else %}
+      <p>Added by: Anonymous</p>
+   {% endif %}
+   ```
 
    Checklist 4:
    Buka `views.py` di subdir main, tambahkan import HttpResponseRedirect, reverse, datetime:
+
    ```
    import datetime
    from django.http import HttpResponseRedirect
@@ -432,6 +443,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
    ```
 
    Ubah fungsi login_user agar menyimpan cookie last_login:
+
    ```
    def login_user(request):
    if request.method == 'POST':
@@ -453,6 +465,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
    `'last_login': request.COOKIES.get('last_login', 'Never')`
 
    Ubah fungsi logout_user untuk menghapus last_login:
+   
    ```
    def logout_user(request):
       logout(request)
