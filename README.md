@@ -228,7 +228,7 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
             return redirect('main:login')
     context = {'form':form}
     return render(request, 'register.html', context)
-    ```
+   ```
    Lalu, buat file `register.html` di main/templates dan file itu diisi dengan
 
    ```
@@ -388,11 +388,11 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
     }
 
     return render(request, "create_product.html", context)
-    ```
+   ```
 
-    lalu, pada show_main:
+   lalu, pada show_main:
 
-    ```
+   ```
    @login_required(login_url='/login')
    def show_main(request):
       filter_type = request.GET.get("filter", "all")  # default 'all'
@@ -412,16 +412,17 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
       }
 
       return render(request, "main.html", context)
-      ```
+   ```
 
-      Lalu, pada main.html tambahkan tombol filter:
+   Lalu, pada main.html tambahkan tombol filter:
+   ```
       <a href="?filter=all">
          <button type="button">All Products</button>
       </a>
       <a href="?filter=my">
          <button type="button">My Products</button>
       </a> 
-      ```
+   ```
 
    tambahkan juga di product_detail.html:
 
