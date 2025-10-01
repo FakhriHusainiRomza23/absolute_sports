@@ -480,6 +480,188 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
 
 
 
+## Tugas 5
+### 1.Jika terdapat beberapa CSS selector untuk suatu elemen HTML, jelaskan urutan prioritas pengambilan CSS selector tersebut!
+   1. Inline styles
+   2. Id selectors
+   3. Classes, attribute selectors, pseudo-classes
+   4. Elements dan pseudo-elements
+   5. Universal selector
+
+### 2. Mengapa responsive design menjadi konsep yang penting dalam pengembangan aplikasi web? Berikan contoh aplikasi yang sudah dan belum menerapkan responsive design, serta jelaskan mengapa!
+   Karena responsive design seperti namanya memberikan pengalaman website yang responsive dan lebih enak dilihat di berbagai platform, mobile, tablet, ataupun desktop. 
+
+   Contoh aplikasi yang telah menerapkan responsive design adalah Instagram dan W3Schools dan contoh aplikasi yang tidak menerapkan responsive design adalah website SIAKNG.
+
+   Responsive design dapat dilihat dengan menekan CTRL+SHIFT+I lalu CTRL+SHIFT+M, aspek rasio akan berubah dan akan terlihat bahwa yang sudah menerapkan responsive design akan mengikuti perubahan.
+
+### 3. Jelaskan perbedaan antara margin, border, dan padding, serta cara untuk mengimplementasikan ketiga hal tersebut!
+   Margin adalah ruang di luar elemen, Border adalah garis yang mengelilingi elemen, berada di antara margin dan padding, padding adalah ruang di dalam elemen, antara konten dan border.
+
+   margin: 20px
+   border: 2px solid purple
+   padding: 10px
+
+
+### 4. Jelaskan konsep flex box dan grid layout beserta kegunaannya!
+   Flex box adalah sistem layout satu dimensi yang dirancang unutk mengatur elemen-elemen dalam satu baris atau kolom. Flexbox sangat berguna untuk layout yang lebih sederhana dan lebih linear, seperti menu navigasi atau form pengisian.
+
+   Grid adalah sistem layout dua dimensi yang memungkinkan pengaturan elemen baik secara horizontal (kolom) maupun vertikal (baris) di dalam sebuah kontainer. Grid sangat berguna dalam membuat desain halaman yang lebih terstruktur dan terorganisir dengan kontrol penuh pada setiap elemen di dalamnya.
+
+
+### 5. Jelaskan bagaimana cara kamu mengimplementasikan checklist di atas secara step-by-step (bukan hanya sekadar mengikuti tutorial)!
+   Pertama-tama kita menambahkan tailwind ke aplikasi, buka file `base.html`, tambahkan tag `<meta name="viewport">` agar halaman menyesuaikan ukuran dan perilaku device mobile. Lalu, tambahkan script cdn tailwind di bagian head. `<script src="https://cdn.tailwindcss.com">`.
+
+   buat fungsi edit_product di views.py
+
+   ```
+   def edit_product(request, id):
+    product = get_object_or_404(Product, pk=id)
+    form = ProductForm(request.POST or None, instance=product)
+    if form.is_valid() and request.method == 'POST':
+        form.save()
+        return redirect('main:show_main')
+
+    context = {
+        'form': form
+    }
+
+    return render(request, "edit_product.html", context)
+   ```
+
+    lalu, buat file HTML dengan nama edit_product.html dan isi dengan:
+    ![alt text](image-18.png)
+
+   import fungsi edit_product di `urls.py`, lalu tambahkan path urlnya `path('news/<uuid:id>/edit', edit_news, name='edit_news'),`
+
+   Tambahkan fitur hapus product dengan menambahkan fungsi delete_product di `views.py`
+   ```
+   def delete_product(request, id):
+    product = get_object_or_404(Product, pk=id)
+    product.delete()
+    return HttpResponseRedirect(reverse('main:show_main'))
+   ```
+
+   import delete_news ke `urls.py` dan tambahkan path urlnya `path('news/<uuid:id>/delete', delete_news, name='delete_news'),`
+
+   Selanjutnya, tambahkan navigation bar pada aplikasi. Pertama, buat file HTML bernama navbar.html di folder templates/ di root. isinya adalah
+   ![alt text](image-19.png)
+   ![alt text](image-20.png)
+
+   tambahkan tautan navbar ke main.html
+
+   pada `settings.py` tambahkan middleware WhiteNoise di bawah SecurityMiddleware\
+   `'whitenoise.middleware.WhiteNoiseMiddleware',`
+
+   pada `settings.py` pastikan variabel STATIC_ROOT, STATICFILES_DIRS, dan STATIC_URL dikonfigurasikan seperti ini
+   ```
+   STATIC_URL = '/static/'
+   if DEBUG:
+      STATICFILES_DIRS = [
+         BASE_DIR / 'static'
+    ]
+   else:
+      STATIC_ROOT = BASE_DIR / 'static'
+   ```
+
+   lalu tambahkan `global.css` di /static/css di root directory, pada base.html tambahkan global.css
+   ```
+   {% load static %}
+   <!DOCTYPE html>
+   <html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      {% block meta %} {% endblock meta %}
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="{% static 'css/global.css' %}"/>
+   </head>
+   <body>
+      {% block content %} {% endblock content %}
+   </body>
+   </html>
+   ```
+
+   lalu, tambahkan styling ke global.css
+   ```
+   .form-style form input, form textarea, form select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 2px solid #bcbcbc;
+    border-radius: 0.375rem;
+   }
+   .form-style form input:focus, form textarea:focus, form select:focus {
+      outline: none;
+      border-color: #800080;
+      box-shadow: 0 0 0 3px #800080;
+   }
+
+   .form-style input[type="checkbox"] {
+      width: 1.25rem;
+      height: 1.25rem;
+      padding: 0;
+      border: 2px solid #d1d5db;
+      border-radius: 0.375rem;
+      background-color: white;
+      cursor: pointer;
+      position: relative;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+   }
+
+   .form-style input[type="checkbox"]:checked {
+      background-color: #800080;
+      border-color: #800080;
+   }
+
+   .form-style input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-weight: bold;
+      font-size: 0.875rem;
+   }
+
+   .form-style input[type="checkbox"]:focus {
+      outline: none;
+      border-color: #800080;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+   }
+   ```
+
+   lalu kita styling masing-masing halaman
+   halaman login:
+   ![alt text](image-21.png)
+   ![alt text](image-22.png)
+
+   halaman register:
+   ![alt text](image-23.png)
+   ![alt text](image-24.png)
+
+   lalu, untuk home page kita tambahkan file `card_product.html`, yang berisi
+   ![alt text](image-25.png)
+
+   lalu, karena kita perlu jika kita belum punya product. pilih foto/image dengan nama no-products.png di directory static/image
+
+   Selanjutnya, styling `product_detail.html` 
+   ![alt text](image-26.png)
+   ![alt text](image-27.png)
+
+   lalu, halaman create_product.html:
+   ![alt text](image-28.png)
+
+   lalu, halaman `edit_product.html`:
+   ![alt text](image-29.png)
+
+   terakhir, ubah `main.html`:
+   ![alt text](image-30.png)
+
+
+
 
 
 

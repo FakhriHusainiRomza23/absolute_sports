@@ -33,3 +33,4 @@ class Product(models.Model):
         self.product_views += 1
         self.save()
 
+
