@@ -1,0 +1,322 @@
+<!-- Product CRUD Modal -->
+<div id="crudModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-70 backdrop-blur-sm transition-opacity duration-200">
+  <div id="crudModalContent" 
+       class="opacity-0 scale-95 transform transition-all duration-200 bg-gray-800 text-gray-100 rounded-2xl shadow-2xl w-11/12 sm:w-3/5 md:w-1/2 lg:w-2/5 xl:w-1/3 max-h-[90vh] overflow-y-auto border border-gray-700">
+    
+    <!-- Header -->
+    <div class="flex items-start justify-between p-6 border-b border-gray-700">
+      <div>
+        <h3 id="modalTitle" class="text-2xl font-semibold text-white">Add New Product</h3>
+        <p id="modalSubtitle" class="text-sm text-gray-400 mt-1">Share your best sports products with the community</p>
+      </div>
+      <button type="button" onclick="hideModal()" class="text-gray-400 hover:text-white transition-colors p-2 rounded-md hover:bg-gray-700">
+        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="sr-only">Close modal</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <form id="productForm" class="p-6 space-y-5">
+      {% csrf_token %}
+      <input type="hidden" id="productId" name="productId" value="">
+      
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-300">Product Name</label>
+        <input type="text" id="name" name="name" required
+               class="mt-2 w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-purple-600 focus:outline-none"
+               placeholder="Enter product name">
+      </div>
+
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-300">Description</label>
+        <textarea id="description" name="description" rows="4" required
+                  class="mt-2 w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-purple-600 focus:outline-none"
+                  placeholder="Describe your product"></textarea>
+      </div>
+
+      <div>
+        <label for="price" class="block text-sm font-medium text-gray-300">Price (Rp)</label>
+        <input type="number" id="price" name="price" required
+               class="mt-2 w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-purple-600 focus:outline-none"
+               placeholder="Enter price">
+      </div>
+
+      <div>
+        <label for="category" class="block text-sm font-medium text-gray-300">Category</label>
+        <select id="category" name="category" required
+                class="mt-2 w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-gray-100 focus:ring-2 focus:ring-purple-600 focus:outline-none">
+          <option value="">Select category</option>
+          <option value="Jerseys">Jerseys</option>
+          <option value="Boots">Boots</option>
+          <option value="Balls">Balls</option>
+          <option value="Training">Training Equipment</option>
+          <option value="Accessories">Accessories</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="thumbnail" class="block text-sm font-medium text-gray-300">Thumbnail URL</label>
+        <input type="url" id="thumbnail" name="thumbnail"
+               class="mt-2 w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-purple-600 focus:outline-none"
+               placeholder="https://example.com/image.jpg">
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <input type="checkbox" id="is_featured" name="is_featured" class="w-4 h-4 text-purple-600 bg-gray-800 border-gray-600 rounded focus:ring-purple-500">
+        <label for="is_featured" class="text-sm text-gray-300">Featured Product</label>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-700">
+      <button type="button" id="cancelButton" onclick="hideModal()" class="order-2 sm:order-1 px-6 py-3 border border-gray-600 text-gray-300 rounded-md hover:bg-gray-700 transition-all text-center">
+        Cancel
+      </button>
+      <button type="submit" id="submitProduct" form="productForm"
+              class="order-1 sm:order-2 flex-1 bg-purple-600 text-white px-6 py-3 rounded-md font-medium hover:bg-purple-700 transition-colors">
+        <span id="submitButtonText">Publish Product</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-70 backdrop-blur-sm transition-opacity duration-200">
+  <div id="deleteModalContent" 
+       class="opacity-0 scale-95 transform transition-all duration-200 bg-gray-800 text-gray-100 rounded-2xl shadow-2xl w-11/12 sm:w-96 border border-red-700">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-center p-6 border-b border-gray-700">
+      <div class="text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-900 bg-opacity-50 mb-4">
+          <svg class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-white mb-2">Delete Product</h3>
+        <p class="text-sm text-gray-400">Are you sure you want to delete this product? This action cannot be undone.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex flex-col sm:flex-row gap-4 p-6">
+      <button type="button" onclick="hideDeleteModal()" class="order-2 sm:order-1 px-6 py-3 border border-gray-600 text-gray-300 rounded-md hover:bg-gray-700 transition-all text-center">
+        Cancel
+      </button>
+      <button type="button" id="confirmDeleteBtn" class="order-1 sm:order-2 flex-1 bg-red-600 text-white px-6 py-3 rounded-md font-medium hover:bg-red-700 transition-colors">
+        Delete Product
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Functions Script -->
+<script>
+  let currentProductId = null;
+  let isEditMode = false;
+
+  // Product CRUD Modal Functions
+  function showCreateModal() {
+    resetForm();
+    isEditMode = false;
+    document.getElementById('modalTitle').textContent = 'Add New Product';
+    document.getElementById('modalSubtitle').textContent = 'Share your best sports products with the community';
+    document.getElementById('submitButtonText').textContent = 'Publish Product';
+    showModal();
+  }
+
+  function showEditModal(productId) {
+    resetForm();
+    isEditMode = true;
+    currentProductId = productId;
+    document.getElementById('modalTitle').textContent = 'Edit Product';
+    document.getElementById('modalSubtitle').textContent = 'Update your product details';
+    document.getElementById('submitButtonText').textContent = 'Update Product';
+    document.getElementById('productId').value = productId;
+    
+    // Load existing product data
+    loadProductData(productId);
+    showModal();
+  }
+
+  function showModal() {
+    const modal = document.getElementById('crudModal');
+    const modalContent = document.getElementById('crudModalContent');
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      modalContent.classList.remove('opacity-0', 'scale-95');
+      modalContent.classList.add('opacity-100', 'scale-100');
+    }, 50);
+  }
+
+  function hideModal() {
+    const modal = document.getElementById('crudModal');
+    const modalContent = document.getElementById('crudModalContent');
+
+    modalContent.classList.remove('opacity-100', 'scale-100');
+    modalContent.classList.add('opacity-0', 'scale-95');
+
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      resetForm();
+    }, 150);
+  }
+
+  // Delete Modal Functions
+  function showDeleteModal(productId) {
+    currentProductId = productId;
+    const modal = document.getElementById('deleteModal');
+    const modalContent = document.getElementById('deleteModalContent');
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      modalContent.classList.remove('opacity-0', 'scale-95');
+      modalContent.classList.add('opacity-100', 'scale-100');
+    }, 50);
+  }
+
+  function hideDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    const modalContent = document.getElementById('deleteModalContent');
+
+    modalContent.classList.remove('opacity-100', 'scale-100');
+    modalContent.classList.add('opacity-0', 'scale-95');
+
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 150);
+  }
+
+  function resetForm() {
+    document.getElementById('productForm').reset();
+    document.getElementById('productId').value = '';
+    currentProductId = null;
+  }
+
+  // Load product data for editing
+  async function loadProductData(productId) {
+    try {
+      const response = await fetch(`/product/${productId}/edit-ajax/`, {
+        method: 'GET',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+      });
+
+      if (response.ok) {
+        const product = await response.json();
+        
+        document.getElementById('name').value = product.name || '';
+        document.getElementById('description').value = product.description || '';
+        document.getElementById('price').value = product.price || '';
+        document.getElementById('category').value = product.category || '';
+        document.getElementById('thumbnail').value = product.thumbnail || '';
+        document.getElementById('is_featured').checked = product.is_featured || false;
+      } else {
+        showErrorToast('Failed to Load Product', 'Could not load product data for editing.');
+      }
+    } catch (error) {
+      console.error('Error loading product data:', error);
+      showErrorToast('Connection Error', 'Could not load product data.');
+    }
+  }
+
+  // Submit product (create or update)
+  async function submitProduct() {
+    try {
+      const formData = new FormData(document.querySelector('#productForm'));
+      let url, method, successMessage;
+
+      if (isEditMode && currentProductId) {
+        url = `/product/${currentProductId}/edit-ajax/`;
+        method = 'POST';
+        successMessage = 'Product updated successfully!';
+      } else {
+        url = "{% url 'main:add_product_entry_ajax' %}";
+        method = 'POST';
+        successMessage = 'Product created successfully!';
+      }
+
+      console.log(`${isEditMode ? 'Updating' : 'Creating'} product...`);
+
+      const response = await fetch(url, {
+        method: method,
+        body: formData,
+      });
+
+      if (response.ok) {
+        hideModal();
+        showSuccessToast(isEditMode ? 'Product Updated!' : 'Product Created!', successMessage);
+        
+        // Dispatch custom event to refresh products
+        document.dispatchEvent(new CustomEvent('productChanged'));
+      } else {
+        const responseText = await response.text();
+        console.error('Server error:', response.status, responseText);
+        showErrorToast('Operation Failed', 'Please check your input and try again.');
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+      showErrorToast('Connection Error', 'Please check your internet connection and try again.');
+    }
+  }
+
+  // Delete product
+  async function deleteProduct() {
+    if (!currentProductId) return;
+
+    try {
+      console.log('Deleting product:', currentProductId);
+
+      const response = await fetch(`/product/${currentProductId}/delete-ajax/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        }
+      });
+
+      if (response.ok) {
+        hideDeleteModal();
+        showSuccessToast('Product Deleted!', 'The product has been removed from your catalog.');
+        
+        // Dispatch custom event to refresh products
+        document.dispatchEvent(new CustomEvent('productChanged'));
+      } else {
+        const responseText = await response.text();
+        console.error('Delete error:', response.status, responseText);
+        showErrorToast('Delete Failed', 'Could not delete the product. Please try again.');
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+      showErrorToast('Connection Error', 'Please check your internet connection and try again.');
+    }
+  }
+
+  // Event Listeners
+  document.getElementById("productForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    submitProduct();
+  });
+
+  document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
+    deleteProduct();
+  });
+
+  // Close modals when clicking outside
+  document.getElementById("crudModal").addEventListener("click", function(e) {
+    if (e.target === this) {
+      hideModal();
+    }
+  });
+
+  document.getElementById("deleteModal").addEventListener("click", function(e) {
+    if (e.target === this) {
+      hideDeleteModal();
+    }
+  });
+</script>

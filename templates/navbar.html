@@ -25,9 +25,9 @@
             <div class="text-sm font-medium text-white">{{ name|default:user.username }}</div>
             <div class="text-xs text-gray-400">{{ npm|default:"Student" }} - {{ class|default:"Class" }}</div>
           </div>
-          <a href="{% url 'main:logout' %}" class="text-red-400 hover:text-red-300 font-medium transition-colors">
-            Logout
-          </a>
+          <button onclick="logoutUser()" class="text-red-400 hover:text-red-300 font-medium transition-colors">
+            <span id="logoutText">Logout</span>
+          </button>
         {% else %}
           <a href="{% url 'main:login' %}" class="text-gray-300 hover:text-white font-medium transition-colors">
             Login
@@ -72,9 +72,9 @@
             <div class="font-medium text-white">{{ name|default:user.username }}</div>
             <div class="text-sm text-gray-400">{{ npm|default:"Student" }} - {{ class|default:"Class" }}</div>
           </div>
-          <a href="{% url 'main:logout' %}" class="block text-red-400 hover:text-red-300 font-medium py-3 transition-colors">
-            Logout
-          </a>
+          <button onclick="logoutUser()" class="block text-red-400 hover:text-red-300 font-medium py-3 transition-colors text-left">
+            <span id="logoutTextMobile">Logout</span>
+          </button>
         {% else %}
           <div class="space-y-3">
             <a href="{% url 'main:login' %}" class="block text-gray-300 hover:text-white font-medium py-3 transition-colors">
@@ -95,5 +95,59 @@
     btn.addEventListener("click", () => {
       menu.classList.toggle("hidden");
     });
+
+    // AJAX Logout Function
+    async function logoutUser() {
+      const logoutText = document.getElementById('logoutText');
+      const logoutTextMobile = document.getElementById('logoutTextMobile');
+
+      // Update button states
+      if (logoutText) logoutText.textContent = 'Logging out...';
+      if (logoutTextMobile) logoutTextMobile.textContent = 'Logging out...';
+
+      try {
+        const response = await fetch("{% url 'main:logout_ajax' %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          // Show success toast if available
+          if (typeof showSuccessToast !== 'undefined') {
+            showSuccessToast('Logout Successful!', data.message);
+          }
+          
+          // Redirect after short delay
+          setTimeout(() => {
+            window.location.href = data.redirect_url;
+          }, 1000);
+        } else {
+          // Show error toast if available
+          if (typeof showErrorToast !== 'undefined') {
+            showErrorToast('Logout Failed', data.message);
+          }
+          
+          // Reset button states
+          if (logoutText) logoutText.textContent = 'Logout';
+          if (logoutTextMobile) logoutTextMobile.textContent = 'Logout';
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        
+        // Show error toast if available
+        if (typeof showErrorToast !== 'undefined') {
+          showErrorToast('Connection Error', 'Please check your internet connection and try again.');
+        }
+        
+        // Reset button states
+        if (logoutText) logoutText.textContent = 'Logout';
+        if (logoutTextMobile) logoutTextMobile.textContent = 'Logout';
+      }
+    }
   </script>
 </nav>

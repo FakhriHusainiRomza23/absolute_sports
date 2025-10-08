@@ -660,10 +660,61 @@ https://drive.google.com/drive/folders/1St8NywVbAFIgZ1AWCbe6VMmZZj2_BzR_?usp=sha
    terakhir, ubah `main.html`:
    ![alt text](image-30.png)
 
+## Tugas 6
 
+### 1. Apa perbedaan antara synchronous request dan asynchronous request?
 
+   Perbedaan utama antara synchronous dan asynchronous request terletak pada cara kerja mereka dalam menangani request dan response.
 
+   **Synchronous Request** bekerja seperti antrian di bank. Ketika kita mengirim request, semua proses lain harus menunggu sampai request tersebut selesai diproses dan mendapat response. Ini seperti ketika kita mengisi form dan menekan tombol submit, halaman akan "freeze" atau menampilkan loading sampai server memberikan respons. Contohnya adalah form submission biasa yang menyebabkan halaman reload dan kita harus menunggu halaman baru dimuat sepenuhnya.
 
+   **Asynchronous Request** bekerja seperti restoran dengan pelayanan yang efisien. Kita bisa memesan makanan (mengirim request) dan sambil menunggu, kita masih bisa ngobrol atau melakukan aktivitas lain. Halaman web tetap bisa digunakan dan responsif meskipun ada proses request yang sedang berjalan di background. Contohnya adalah fitur AJAX dimana kita bisa menambah produk baru tanpa halaman reload, dan sambil menunggu produk tersimpan, kita masih bisa scroll atau melakukan aktivitas lain di halaman.
 
+### 2. Bagaimana AJAX bekerja di Django (alur request–response)?
 
+   AJAX di Django bekerja seperti sistem komunikasi antara frontend dan backend yang sangat smooth. Prosesnya dimulai dari JavaScript di browser yang mengirim request ke server Django, kemudian Django memproses dan mengirim response kembali dalam format JSON.
+
+   Misalnya ketika user klik tombol "Create Product":
+
+   1. **JavaScript mengirim data**: Browser mengambil data dari form dan mengirimkannya ke Django menggunakan fetch API. CSRF token harus disertakan untuk keamanan.
+
+   2. **Django menerima dan routing**: Django menerima request di urls.py dan mengarahkannya ke view yang tepat, misalnya `add_product_entry_ajax`.
+
+   3. **Views memproses data**: Di views.py, Django memproses data yang diterima - validasi input, simpan ke database, dan siapkan response. JsonResponse digunakan untuk mengirim data kembali dalam format JSON.
+
+   4. **JavaScript handle response**: Setelah dapat response, JavaScript akan update tampilan - munculkan toast notification, refresh daftar produk, tutup modal - semua tanpa reload halaman.
+
+   Yang menarik, seluruh proses ini terjadi sangat cepat dan user bahkan tidak merasa ada komunikasi dengan server karena halaman tetap responsif.
+
+### 3. Apa keuntungan menggunakan AJAX dibandingkan render biasa di Django?
+
+   **User Experience jadi jauh lebih nyaman**: Dulu kalau user mau tambah produk, mereka harus tunggu halaman reload yang kadang bikin scroll position hilang atau form data ikut hilang kalau ada error. Sekarang dengan AJAX, user tinggal klik tombol, isi form di modal, submit, dan langsung dapat feedback berupa toast notification. Halaman tetap di posisi yang sama, smooth banget.
+
+   **Performance jadi lebih optimal**: Bayangkan kalau setiap kali tambah produk, server harus kirim ulang seluruh halaman HTML yang besar. Dengan AJAX, cuma perlu kirim data produk yang diperlukan saja dalam format JSON yang ukurannya jauh lebih kecil. Server juga tidak perlu capek-capek render HTML template yang kompleks.
+
+   **Interaksi jadi lebih interaktif**: User bisa melakukan multiple actions bersamaan. Misalnya sambil nunggu produk A tersimpan, mereka sudah bisa mulai scroll-scroll lihat produk lain atau bahkan mulai buat produk B. Tidak ada lagi yang namanya "halaman freeze" menunggu response.
+
+### 4. Bagaimana cara memastikan keamanan saat menggunakan AJAX untuk fitur Login dan Register di Django?
+
+   Keamanan AJAX itu seperti sistem keamanan rumah - harus ada beberapa lapis perlindungan supaya aman dari berbagai jenis ancaman.
+
+   **CSRF Protection**: Setiap kali kirim AJAX request, CSRF token harus disertakan di header. Ini seperti password khusus yang membuktikan bahwa request benar-benar datang dari website yang benar. Setiap form AJAX pasti ada CSRF token yang disertakan untuk keamanan.
+
+   **Validasi input harus double-check**: Meskipun sudah ada validasi di frontend pakai JavaScript, tetap harus validasi ulang di backend Django. Soalnya user yang jahat bisa bypass validasi frontend, jadi backend harus tetap waspada. Fungsi `strip_tags()` digunakan untuk bersihin input dari HTML yang berbahaya dan mengecek apakah username memenuhi syarat minimum.
+
+   **Authorization yang ketat**: Tidak semua orang boleh akses semua endpoint AJAX. Untuk fitur edit/delete produk misalnya, hanya user yang login dan pemilik produk yang bisa melakukannya. Decorator `@login_required` dan pengecekan ownership di views memastikan hal ini.
+
+   **Response yang terstruktur**: Tidak boleh expose informasi sensitif di response JSON. Response selalu dalam format yang konsisten dengan status dan message yang aman, tidak bocorkan detail sistem atau error yang bisa dimanfaatkan hacker.
+
+   **Error handling yang aman**: Kalau ada error, tidak boleh tampilkan error message yang detail ke user karena bisa bocorkan informasi sistem. User cuma dapat pesan yang user-friendly, sedangkan detail error disimpan di log server untuk debugging.
+
+### 5. Bagaimana AJAX mempengaruhi pengalaman pengguna (User Experience) pada website?
+
+   **Interaksi seamless**: Dulu user harus sabar nunggu halaman reload setiap kali mau tambah produk atau edit sesuatu. Sekarang semua terasa instant - klik tombol, modal muncul, isi form, submit, langsung dapat feedback. Posisi scroll tetap sama, filter yang dipilih tidak hilang, dan user tetap dalam "flow" yang sama.
+
+   **Feedback real-time**: Setiap action user langsung dapat respon visual. Tombol berubah jadi "Creating..." dengan spinner, muncul toast notification hijau kalau berhasil atau merah kalau error. User tidak pernah bingung apakah action mereka berhasil atau tidak.
+
+   **Website terasa lebih cepat**: Meskipun secara teknis mungkin proses di backend sama aja, tapi user merasakan website jadi jauh lebih cepat karena tidak ada delay page reload. Data dimuat di background sambil user tetap bisa berinteraksi dengan elemen lain di halaman.
+
+   **Mobile experience jadi lebih baik**: Di mobile, page reload itu sangat mengganggu karena loading time lebih lama dan sering ada masalah dengan keyboard yang muncul-hilang. Dengan modal AJAX, user mobile bisa dengan nyaman tambah atau edit produk tanpa frustasi.
 
