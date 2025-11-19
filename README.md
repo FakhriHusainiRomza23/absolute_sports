@@ -1,3 +1,21 @@
+## Tugas 9
+
+- Tujuan: Integrasi layanan web Django dengan aplikasi Flutter (login, register, daftar item via JSON, detail item, filter item milik user, dan create item dari Flutter).
+
+- Implementasi Backend (Django):
+   - Autentikasi untuk Flutter: endpoint `/auth/login/`, `/auth/register/`, dan `/auth/logout/` mengembalikan JSON sesuai spesifikasi Tutorial 8. CORS, cookie, dan ALLOWED_HOSTS dikonfigurasi (termasuk `10.0.2.2`).
+   - Endpoint data: `/json/` untuk semua item, `/json/<id>/` untuk detail, dan `/json-mine/` untuk item milik pengguna yang login. Tersedia juga `/proxy-image/` untuk memuat gambar eksternal.
+   - Form Flutter: endpoint `/create-flutter/` menerima JSON (menggunakan cookie session), memvalidasi input, dan menyimpan item baru dengan asosiasi user.
+
+- Jawaban pertanyaan:
+   - Model Dart: Dibutuhkan agar parsing dan validasi tipe data dari JSON konsisten, aman (null-safety), dan mudah dirawat. Tanpa model dan hanya memakai `Map<String, dynamic>`, validasi tipe rentan terlewat, raw keys mudah salah, dan refactor jadi berisiko.
+   - http vs CookieRequest: `http` dipakai untuk request umum (tanpa state session/cookie). `CookieRequest` menyimpan dan mengirim cookie session Django otomatis, sehingga cocok untuk login/logout dan request yang memerlukan autentikasi.
+   - Provider untuk CookieRequest: Instance `CookieRequest` dibagikan lewat `Provider` agar seluruh widget dapat mengakses state login/cookie yang sama tanpa meneruskan parameter manual.
+   - Konfigurasi konektivitas: Tambahkan `10.0.2.2` pada `ALLOWED_HOSTS` untuk emulator Android, aktifkan CORS dan atur `SameSite=None` serta `Secure=True` pada cookie agar cookie terkirim lintas origin, dan tambahkan izin Internet di Android. Tanpa ini, request akan gagal (CORS/CSRF) atau cookie tidak terkirim.
+   - Alur data: Input di Flutter -> encode JSON -> kirim via `postJson`/`http` -> Django view mem-parse, memvalidasi, menyimpan -> response JSON -> Flutter decode -> tampilkan di UI melalui model Dart.
+   - Alur autentikasi: Flutter mengirim kredensial ke `/auth/login/` -> Django verifikasi dan set cookie session -> `CookieRequest.loggedIn = true` -> Flutter akses endpoint yang dilindungi. Register mengirim data ke `/auth/register/` (JSON) -> sukses -> login; Logout ke `/auth/logout/` -> session dihapus.
+   - Ringkasan implementasi step-by-step: Sesuaikan endpoint auth JSON, tambahkan CORS dan host emulator, buat endpoint `/json/`, `/json/<id>/`, `/json-mine/`, `/proxy-image/`, serta `/create-flutter/`. Uji alur register, login, ambil list, detail, filter milik user, dan tambah item dari Flutter.
+
 # Absolute Sports
 ## Aplikasi football shop saya dapat di akses di link berikut: https://fakhri-husaini41-absolutesports.pbp.cs.ui.ac.id/ 
 

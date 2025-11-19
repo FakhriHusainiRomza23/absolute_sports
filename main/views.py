@@ -10,12 +10,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils.html import strip_tags
 import datetime
+import json
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.http import HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-
+import requests
 
 @login_required(login_url='/login')
 def show_main(request):
@@ -72,6 +73,27 @@ def show_xml(request):
 
 def show_json(request):
     product_list = Product.objects.all()
+    data = [
+        {
+            'id': str(product.id),
+            'name': product.name,
+            'price': product.price,
+            'description': product.description,
+            'category': product.category,
+            'thumbnail': product.thumbnail,
+            'product_views': product.product_views,
+            'is_featured': product.is_featured,
+            'is_hot': product.is_product_hot,
+            'user_id': product.user_id,
+        }
+        for product in product_list
+    ]
+
+    return JsonResponse(data, safe=False)
+
+@login_required(login_url='/login')
+def show_json_mine(request):
+    product_list = Product.objects.filter(user=request.user)
     data = [
         {
             'id': str(product.id),
@@ -331,4 +353,66 @@ def logout_ajax(request):
     
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
 
+def proxy_image(request):
+    image_url = request.GET.get('url')
+    if not image_url:
+        return HttpResponse('No URL provided', status=400)
+    
+    try:
+        # Fetch image from external source
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+        
+        # Return the image with proper content type
+        return HttpResponse(
+            response.content,
+            content_type=response.headers.get('Content-Type', 'image/jpeg')
+        )
+    except requests.RequestException as e:
+        return HttpResponse(f'Error fetching image: {str(e)}', status=500)
 
+@csrf_exempt
+def create_product_flutter(request):
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Invalid method."}, status=405)
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "error", "message": "Authentication required."}, status=401)
+
+    # Parse JSON body safely
+    try:
+        data = json.loads(request.body or b"{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON payload."}, status=400)
+
+    # Accept tutorial 8 field names as well (title/content)
+    name = strip_tags((data.get("name") or data.get("title") or "")).strip()
+    description = strip_tags((data.get("description") or data.get("content") or "")).strip()
+    category = data.get("category", "").strip()
+    thumbnail = data.get("thumbnail", "").strip()
+    is_featured = bool(data.get("is_featured", False))
+    raw_price = data.get("price", 0)
+
+    # Convert price
+    try:
+        price = int(raw_price) if str(raw_price).strip() != '' else 0
+    except (ValueError, TypeError):
+        return JsonResponse({"status": "error", "message": "Price must be an integer."}, status=400)
+
+    if not name:
+        return JsonResponse({"status": "error", "message": "Name is required."}, status=400)
+    if not description:
+        return JsonResponse({"status": "error", "message": "Description is required."}, status=400)
+
+    new_product = Product(
+        name=name,
+        description=description,
+        category=category or 'football',  # fallback to a valid choice
+        price=price,
+        thumbnail=thumbnail,
+        is_featured=is_featured,
+        user=request.user
+    )
+    new_product.save()
+
+    return JsonResponse({"status": "success", "message": "Product created successfully!", "id": str(new_product.id)}, status=200)
