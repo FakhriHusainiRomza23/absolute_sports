@@ -85,6 +85,7 @@ def show_json(request):
             'is_featured': product.is_featured,
             'is_hot': product.is_product_hot,
             'user_id': product.user_id,
+            'user_username': product.user.username if product.user else None,
         }
         for product in product_list
     ]
@@ -106,11 +107,59 @@ def show_json_mine(request):
             'is_featured': product.is_featured,
             'is_hot': product.is_product_hot,
             'user_id': product.user_id,
+            'user_username': product.user.username if product.user else None,
         }
         for product in product_list
     ]
 
     return JsonResponse(data, safe=False)
+
+@csrf_exempt
+def show_json_mine_flutter(request):
+    if request.method != 'GET':
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid method'
+        }, status=405)
+
+    username = request.GET.get('username')
+    if not username:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Username parameter is required.'
+        }, status=400)
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'User not found.'
+        }, status=404)
+
+    product_list = Product.objects.filter(user=user)
+    data = [
+        {
+            'id': str(product.id),
+            'name': product.name,
+            'price': product.price,
+            'description': product.description,
+            'category': product.category,
+            'thumbnail': product.thumbnail,
+            'product_views': product.product_views,
+            'is_featured': product.is_featured,
+            'is_hot': product.is_product_hot,
+            'user_id': product.user_id,
+            'user_username': product.user.username if product.user else None,
+        }
+        for product in product_list
+    ]
+
+    return JsonResponse({
+        'status': 'success',
+        'count': len(data),
+        'products': data
+    })
 
 def show_xml_by_id(request, product_id):
     try:
@@ -289,11 +338,18 @@ def login_ajax(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            response = JsonResponse({
+            response_payload = {
                 'status': 'success',
                 'message': 'Login successful!',
-                'redirect_url': reverse('main:show_main')
-            })
+                'redirect_url': reverse('main:show_main'),
+                'username': user.username,
+                'user_id': user.pk,
+            }
+            request.session['login_payload'] = {
+                'username': user.username,
+                'user_id': user.pk,
+            }
+            response = JsonResponse(response_payload)
             response.set_cookie('last_login', str(datetime.datetime.now()))
             return response
         else:
@@ -370,49 +426,66 @@ def proxy_image(request):
         )
     except requests.RequestException as e:
         return HttpResponse(f'Error fetching image: {str(e)}', status=500)
-
+    
 @csrf_exempt
 def create_product_flutter(request):
-    if request.method != 'POST':
-        return JsonResponse({"status": "error", "message": "Invalid method."}, status=405)
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        name = strip_tags(data.get("name", ""))  # Strip HTML tags
+        description = strip_tags(data.get("description", ""))  # Strip HTML tags
+        category = data.get("category", "")
+        thumbnail = data.get("thumbnail", "")
+        is_featured = data.get("is_featured", False)
+        username = data.get("username")
+        price_raw = data.get("price")
 
-    if not request.user.is_authenticated:
-        return JsonResponse({"status": "error", "message": "Authentication required."}, status=401)
+        if price_raw in (None, ""):
+            return JsonResponse({
+                "status": "error",
+                "message": "Price is required."
+            }, status=400)
 
-    # Parse JSON body safely
-    try:
-        data = json.loads(request.body or b"{}")
-    except json.JSONDecodeError:
-        return JsonResponse({"status": "error", "message": "Invalid JSON payload."}, status=400)
+        try:
+            price = int(price_raw)
+        except (TypeError, ValueError):
+            return JsonResponse({
+                "status": "error",
+                "message": "Price must be a whole number."
+            }, status=400)
 
-    # Accept tutorial 8 field names as well (title/content)
-    name = strip_tags((data.get("name") or data.get("title") or "")).strip()
-    description = strip_tags((data.get("description") or data.get("content") or "")).strip()
-    category = data.get("category", "").strip()
-    thumbnail = data.get("thumbnail", "").strip()
-    is_featured = bool(data.get("is_featured", False))
-    raw_price = data.get("price", 0)
+        if price < 0:
+            return JsonResponse({
+                "status": "error",
+                "message": "Price cannot be negative."
+            }, status=400)
+        user = request.user if request.user.is_authenticated else None
 
-    # Convert price
-    try:
-        price = int(raw_price) if str(raw_price).strip() != '' else 0
-    except (ValueError, TypeError):
-        return JsonResponse({"status": "error", "message": "Price must be an integer."}, status=400)
+        if not user and username:
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "User not found."
+                }, status=404)
 
-    if not name:
-        return JsonResponse({"status": "error", "message": "Name is required."}, status=400)
-    if not description:
-        return JsonResponse({"status": "error", "message": "Description is required."}, status=400)
-
-    new_product = Product(
-        name=name,
-        description=description,
-        category=category or 'football',  # fallback to a valid choice
-        price=price,
-        thumbnail=thumbnail,
-        is_featured=is_featured,
-        user=request.user
-    )
-    new_product.save()
-
-    return JsonResponse({"status": "success", "message": "Product created successfully!", "id": str(new_product.id)}, status=200)
+        if not user:
+            return JsonResponse({
+                "status": "error",
+                "message": "Unable to determine user. Include a valid username or login first."
+            }, status=401)
+        
+        new_product = Product(
+            name=name, 
+            price=price,
+            description=description,
+            category=category,
+            thumbnail=thumbnail,
+            is_featured=is_featured,
+            user=user
+        )
+        new_product.save()
+        
+        return JsonResponse({"status": "success"}, status=200)
+    else:
+        return JsonResponse({"status": "error"}, status=401)

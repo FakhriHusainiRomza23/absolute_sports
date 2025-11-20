@@ -1,63 +1,85 @@
-from django.test import TestCase, Client
-from .models import News
+import json
+from django.contrib.auth.models import User
+from django.test import Client, TestCase
+from django.urls import reverse
+from .models import Product
 
-class MainTest(TestCase):
-    def test_main_url_is_exist(self):
-        response = Client().get('')
-        self.assertEqual(response.status_code, 200)
 
-    def test_main_using_main_template(self):
-        response = Client().get('')
-        self.assertTemplateUsed(response, 'main.html')
+def _sample_product_kwargs(user):
+  return {
+    "user": user,
+    "name": "Sample Ball",
+    "price": 100000,
+    "description": "A durable training ball.",
+    "category": "football",
+    "thumbnail": "https://example.com/ball.jpg"
+  }
 
-    def test_nonexistent_page(self):
-        response = Client().get('/burhan_always_exists/')
-        self.assertEqual(response.status_code, 404)
 
-    def test_news_creation(self):
-        news = News.objects.create(
-          title="BURHAN FC MENANG",
-          content="BURHAN FC 1-0 PANDA BC",
-          category="match",
-          news_views=1001,
-          is_featured=True
-        )
-        self.assertTrue(news.is_news_hot)
-        self.assertEqual(news.category, "match")
-        self.assertTrue(news.is_featured)
-        
-    def test_news_default_values(self):
-        news = News.objects.create(
-          title="Test News",
-          content="Test content"
-        )
-        self.assertEqual(news.category, "update")
-        self.assertEqual(news.news_views, 0)
-        self.assertFalse(news.is_featured)
-        self.assertFalse(news.is_news_hot)
-        
-    def test_increment_views(self):
-        news = News.objects.create(
-          title="Test News",
-          content="Test content"
-        )
-        initial_views = news.news_views
-        news.increment_views()
-        self.assertEqual(news.news_views, initial_views + 1)
-        
-    def test_is_news_hot_threshold(self):
-        # Test news with exactly 20 views (should not be hot)
-        news_20 = News.objects.create(
-          title="News with 20 views",
-          content="Test content",
-          news_views=20
-        )
-        self.assertFalse(news_20.is_news_hot)
-        
-        # Test news with 21 views (should be hot)
-        news_21 = News.objects.create(
-          title="News with 21 views", 
-          content="Test content",
-          news_views=21
-        )
-        self.assertTrue(news_21.is_news_hot)
+class MainViewTests(TestCase):
+  def setUp(self):
+    self.client = Client()
+    self.user = User.objects.create_user(username="tester", password="secret")
+
+  def test_show_json_requires_no_auth(self):
+    Product.objects.create(**_sample_product_kwargs(self.user))
+    response = self.client.get(reverse("main:show_json"))
+    self.assertEqual(response.status_code, 200)
+    data = response.json()
+    self.assertEqual(1, len(data))
+    self.assertEqual(self.user.username, data[0]["user_username"])
+
+  def test_show_json_mine_requires_login(self):
+    response = self.client.get(reverse("main:show_json_mine"))
+    self.assertEqual(response.status_code, 302)
+
+    Product.objects.create(**_sample_product_kwargs(self.user))
+    self.client.force_login(self.user)
+    response = self.client.get(reverse("main:show_json_mine"))
+    self.assertEqual(response.status_code, 200)
+    data = response.json()
+    self.assertEqual(1, len(data))
+    self.assertEqual(self.user.id, data[0]["user_id"])
+    self.assertEqual(self.user.username, data[0]["user_username"])
+
+  def test_create_product_flutter_assigns_user_from_username(self):
+    payload = {
+      "username": self.user.username,
+      "name": "Flutter Boots",
+      "description": "High grip soles.",
+      "category": "shoes",
+      "thumbnail": "https://example.com/boots.jpg",
+      "price": 250000
+    }
+    response = self.client.post(
+      reverse("main:create_product_flutter"),
+      data=json.dumps(payload),
+      content_type="application/json"
+    )
+    self.assertEqual(response.status_code, 200)
+    self.assertEqual(Product.objects.filter(user=self.user).count(), 1)
+
+  def test_show_json_mine_flutter_honors_username_query(self):
+    Product.objects.create(**_sample_product_kwargs(self.user))
+    response = self.client.get(reverse("main:show_json_mine_flutter"), {"username": self.user.username})
+    self.assertEqual(response.status_code, 200)
+    data = response.json()
+    self.assertEqual(data["count"], 1)
+    self.assertEqual(len(data["products"]), 1)
+    self.assertEqual(self.user.username, data["products"][0]["user_username"])
+
+  def test_create_product_flutter_validates_price(self):
+    payload = {
+      "username": self.user.username,
+      "name": "Faulty Item",
+      "description": "",
+      "category": "football",
+      "thumbnail": "",
+      "price": ""
+    }
+    response = self.client.post(
+      reverse("main:create_product_flutter"),
+      data=json.dumps(payload),
+      content_type="application/json"
+    )
+    self.assertEqual(response.status_code, 400)

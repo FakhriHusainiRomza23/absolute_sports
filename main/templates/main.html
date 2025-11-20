@@ -173,6 +173,7 @@ function buildProductCardElement(product) {
   const categoryLabel = getReadableCategoryName(product.category);
   const isFeatured = product.is_featured;
   const isHot = product.is_hot;
+  const creatorName = product.user_username || 'Unknown seller';
 
   const thumbnailHtml = product.thumbnail 
     ? `<img src='${product.thumbnail}' alt='${product.name}' class='w-full h-full object-cover'>` 
@@ -247,6 +248,10 @@ function buildProductCardElement(product) {
       <!-- Description -->
       <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed line-clamp-2 mb-3">
         ${product.description}
+      </p>
+
+      <p class="text-xs text-gray-400 mb-3">
+        Created by <span class="text-gray-200 font-medium">${creatorName}</span>
       </p>
 
       <!-- Actions -->
